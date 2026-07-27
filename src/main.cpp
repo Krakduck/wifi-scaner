@@ -5,19 +5,18 @@
 #include <SPI.h> 
 #include <lwip/etharp.h>
 
-#define TFT_DC   D2  // Сюда подключаем DC дисплея
-#define TFT_RST  D4  // Сюда подключаем RST дисплея
-#define TFT_CS   D8  // Этот пин оставляем в воздухе!
+//пины
+const uint8_t scan_btn = D1;
+const uint8_t page_btn = D6;
+const uint8_t screen_mode_btn = D0;
+const uint8_t TFT_DC = D2;  // Сюда подключаем DC дисплея
+const uint8_t TFT_RST = D4; // Сюда подключаем RST дисплея
+const uint8_t TFT_CS = D8;  // Этот пин оставляем в воздухе!
 
 Adafruit_ILI9341 display = Adafruit_ILI9341(TFT_CS, TFT_DC, TFT_RST);
 
-//пины
-#define scan_btn D1
-#define page_btn D6
-#define screen_mode_btn D0
-
 //структуры
-struct MakeMassivNet{
+struct WifiNetwork{
   String ssid;
   int32_t rssi;
   String bssid;
@@ -25,15 +24,15 @@ struct MakeMassivNet{
   String encryption;
 };
 
-struct MakeMassivDevice{
+struct NetworkDevice{
   String ip;
   String bssid;
-  String manufacturer;
+  const char* manufacturer;
 };
 
 struct MacVendor {
-    String prefix;
-    String vendor;
+  const char* prefix;
+  const char* vendor;
 };
 
 // Структура для хранения информации об открытом порте
@@ -45,7 +44,7 @@ struct OpenService {
 // Список известных портов и их описаний
 struct KnownPort {
   uint16_t port;
-  String serviceName;
+  const char* serviceName;
 };
 
 // Таблица с префиксами
@@ -103,9 +102,9 @@ const uint8_t amount_screen = 4;
 
 OpenService service_device[max_amount_net]={};
 
-MakeMassivNet data_net[max_amount_net]={};
+WifiNetwork data_net[max_amount_net]={};
 
-MakeMassivDevice data_device[max_amount_net]={};
+NetworkDevice data_device[max_amount_net]={};
 
 const KnownPort common_ports[] = {
   {80,   "HTTP (Web Interface)"},
@@ -133,16 +132,16 @@ bool last_page_btn_result = 0;
 bool last_screen_mode_btn_result=0;
 
 //прототипы функций
-void add_net(String ssid, int32_t rssi, String bssid, int32_t chanel, String encryption);
-void scan_net();
-void draw_main_screen(String ssid, int32_t rssi, String bssid, int32_t chanel, String encryption );
-void draw_device(uint8_t index);
-void draw_info_net(IPAddress* local_ip,IPAddress* subnet_mask,IPAddress* gateway_ip);
-void draw_ports(uint16_t index);
-void scan_target_ports();
+void AddNet(String ssid, int32_t rssi, String bssid, int32_t chanel, String encryption);
+void ScanNet();
+void DrawMainScreen(String ssid, int32_t rssi, String bssid, int32_t chanel, String encryption );
+void DrawDevice(uint8_t index);
+void DrawInfoNet(IPAddress* local_ip,IPAddress* subnet_mask,IPAddress* gateway_ip);
+void DrawPorts(uint16_t index);
+void ScanTargetPorts();
 void Manufacturer(String bssid, int index);
-void scan_device();
-void conect();
+void ScanDevice();
+void Connect();
 
 void setup() {
   Serial.begin(115200);
@@ -159,10 +158,10 @@ void setup() {
   pinMode(page_btn,INPUT_PULLUP);
   pinMode(screen_mode_btn,INPUT_PULLUP);
 
-  scan_net();
+  ScanNet();
 }
 
-void add_net(String ssid, int32_t rssi, String bssid, int32_t chanel, String encryption){
+void AddNet(String ssid, int32_t rssi, String bssid, int32_t chanel, String encryption){
   bool saved=false;
   bool space_found = false;
   for(int i=0;i<max_amount_net;i++){
@@ -191,7 +190,7 @@ void add_net(String ssid, int32_t rssi, String bssid, int32_t chanel, String enc
   }
 }
 
-void scan_net(){
+void ScanNet(){
   Serial.println("сканер вызван");
   int count_net = WiFi.scanNetworks();//фнукция возвращает число,кол-во найденных сетей или -1, сканирование еще продолжается (в асинхронном режиме), -2, если произошла ошибка
   //Serial.println(count_net);
@@ -221,13 +220,13 @@ void scan_net(){
         case 8: encryption="WPA / WPA2 / PSK"; break;
         default: encryption="Неизвестно";
       } 
-      add_net(ssid,rssi,bssid,chanel,encryption);
+      AddNet(ssid,rssi,bssid,chanel,encryption);
     }
   }
   Serial.println("сканер завершил работу");
 }
 
-void draw_main_screen(String ssid, int32_t rssi, String bssid, int32_t chanel, String encryption ) {
+void DrawMainScreen(String ssid, int32_t rssi, String bssid, int32_t chanel, String encryption ) {
   Serial.println("начинается отрисовка");
   uint16_t COLOR_BG   = ILI9341_WHITE;
   uint16_t COLOR_TXT  = ILI9341_BLACK;
@@ -324,7 +323,7 @@ void draw_main_screen(String ssid, int32_t rssi, String bssid, int32_t chanel, S
   Serial.println("отрисовка завершена");
 }
 
-void draw_device(uint8_t index){
+void DrawDevice(uint8_t index){
   Serial.print("сейчас в функции draw_device будет отрисована страница:");
   Serial.println(index);
   display.fillScreen(ILI9341_WHITE);
@@ -339,7 +338,7 @@ void draw_device(uint8_t index){
   update_static_elements = true;
 }
 
-void draw_info_net(IPAddress* local_ip,IPAddress* subnet_mask,IPAddress* gateway_ip){
+void DrawInfoNet(IPAddress* local_ip,IPAddress* subnet_mask,IPAddress* gateway_ip){
   display.setCursor(0,0);
   display.setTextSize(2);
   display.println("LOCAL IP:");
@@ -352,7 +351,7 @@ void draw_info_net(IPAddress* local_ip,IPAddress* subnet_mask,IPAddress* gateway
   display.println(*gateway_ip);
 }
 
-void draw_ports(uint16_t index){
+void DrawPorts(uint16_t index){
   display.fillScreen(ILI9341_WHITE);
   display.setTextColor(ILI9341_BLACK);
   display.setCursor(0,0);
@@ -375,7 +374,7 @@ void draw_ports(uint16_t index){
   update_static_elements = true;
 }
 
-void scan_target_ports() {
+void ScanTargetPorts() {
   WiFiClient client;
   
   // Уменьшаем тайм-аут ожидания ответа до 200 мс (по умолчанию 5000 мс),
@@ -417,7 +416,7 @@ void scan_target_ports() {
       delay(10); 
     }
   }
-  draw_ports(0);
+  DrawPorts(0);
 }
 
 void Manufacturer(String bssid, int index) {
@@ -454,7 +453,7 @@ void Manufacturer(String bssid, int index) {
   }
 }
 
-void scan_device(){
+void ScanDevice(){
   struct eth_addr* ret_ethaddr; // Указатель, куда lwIP запишет адрес      Внутри ret_ethaddr находится структура eth_addr. А внутри нее есть массив addr из 6 байт. Это и есть 6 чисел нашего MAC-адреса (например: 0x00, 0x1A, 0x2B, 0x3C, 0x4D, 0x5E).       когда функия в raport() отработает, она запишет значения в эти переменные 
   const ip4_addr_t* ret_ipaddr;  
   Serial.println("функция scan_device вызвана");
@@ -475,7 +474,7 @@ void scan_device(){
   IPAddress subnet_mask = WiFi.subnetMask();
   IPAddress gateway_ip = WiFi.gatewayIP();
   total_device=0;
-  draw_info_net(&local_ip,&subnet_mask,&gateway_ip);
+  DrawInfoNet(&local_ip,&subnet_mask,&gateway_ip);
   display.setCursor(200,200);
   display.setTextColor(ILI9341_RED);
   display.print("!!!");
@@ -524,7 +523,7 @@ void scan_device(){
   update_static_elements = true;
 }
 
-void conect(){
+void Connect(){
   WiFi.disconnect();
   Serial.println("функция conect вызвана");
   String ssid = data_net[current_net_index].ssid;
@@ -540,7 +539,7 @@ void conect(){
       WiFi.begin(ssid,"147852369");
     }
   }
-  scan_device();
+  ScanDevice();
 }
 
 void loop() {
@@ -566,15 +565,15 @@ void loop() {
     Serial.println(screen_mode);
     switch (screen_mode){
       case 0: need_draw = true; break;
-      case 1: conect();break;
-      case 2: draw_device(curent_index);break;
-      case 3: scan_target_ports(); break;
+      case 1: Connect();break;
+      case 2: DrawDevice(curent_index);break;
+      case 3: ScanTargetPorts(); break;
     }
   }
 
   if (scan_btn_result!=last_scan_btn_result && scan_btn_result){
     Serial.println("нажат кнопка D6 scan_btn");
-    scan_net();
+    ScanNet();
     need_draw = true;
   }
   
@@ -590,12 +589,12 @@ void loop() {
     }
     if (screen_mode==2){
       curent_index++;
-      draw_device(curent_index);
+      DrawDevice(curent_index);
       Serial.println(current_net_index);
     }
     if (screen_mode==3){
       curent_index++;
-      draw_ports(curent_index);
+      DrawPorts(curent_index);
       Serial.println(current_net_index);
     }   
   }
@@ -619,7 +618,7 @@ void loop() {
     int32_t chanel = data_net[current_net_index].chanel;
     String encryption = data_net[current_net_index].encryption;
     Serial.println("вызвана функция отрисовки");
-    draw_main_screen(ssid,rssi,bssid, chanel,encryption);
+    DrawMainScreen(ssid,rssi,bssid, chanel,encryption);
   }
 
   last_scan_btn_result = scan_btn_result;
