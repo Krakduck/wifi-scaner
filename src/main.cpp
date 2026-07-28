@@ -76,22 +76,13 @@ const MacVendor vendors[] = {
   // --- Google / Raspberry Pi ---
   {"F4:F5:DB", "Google"}, {"3C:5A:B4", "Google"}, {"D8:EB:46", "Google"},
   {"B8:27:EB", "Raspberry Pi"}, {"DC:A6:32", "Raspberry Pi"}, {"E4:5F:01", "Raspberry Pi"}
+
 };
 
-// База вендоров по OUI (MAC-префиксам)
-const MacVendor vendors[] = {
-  {"00:1A:2B", "Ayecom"},
-  {"00:0C:29", "VMware"},
-  {"DC:A6:32", "Raspberry Pi"},
-  {"B8:27:EB", "Raspberry Pi"},
-  {"E4:5F:01", "Raspberry Pi"},
-  {"00:15:5D", "Microsoft"},
-  {"00:50:56", "VMware"},
-  {nullptr, nullptr} // Маркер конца массива
-};
+const uint8_t totalItems = sizeof(vendors) / sizeof(vendors[0]);
 
 // Список часто используемых портов
-const KnownPort common_ports[] = {
+const KnownPort common_ports[7] = {
   {80, "HTTP"},
   {443, "HTTPS"},
   {22, "SSH"},
@@ -133,6 +124,7 @@ void loop() {
   
   if (screen_mode > amount_screen - 1) {
     screen_mode = 0;
+    need_draw = true;
     Serial.println(screen_mode);
   }
   

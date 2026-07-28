@@ -100,45 +100,83 @@ void DrawMainScreen(String ssid, int32_t rssi, String bssid, int32_t chanel, Str
 void DrawDevice(uint8_t index){
   Serial.print("сейчас в функции draw_device будет отрисована страница:");
   Serial.println(index);
-  display.fillScreen(ILI9341_WHITE);
-  display.setTextColor(ILI9341_BLACK);
-  display.setCursor(0,0);
+  uint16_t color_elements = ILI9341_WHITE;
+
+  display.fillScreen(ILI9341_BLACK);
+  display.setTextColor(color_elements);
+  display.setTextSize(2);
+
+  display.drawLine(5,5,235,5,color_elements);
+  display.drawLine(235,5,235,315,color_elements);
+  display.drawLine(235,315,5,315,color_elements);
+  display.drawLine(5,315,5,5,color_elements);
+
+  display.setCursor(10,10);
   display.setTextSize(2);
   display.println("IP DEVICE:");
+  display.setCursor(10,display.getCursorY());
   display.println(data_device[index].ip);
   display.println("");
+  display.setCursor(10,display.getCursorY());
   display.println("MANUFACTURER DEVICE:");
+  display.setCursor(10,display.getCursorY());
   display.println(data_device[index].manufacturer);
   update_static_elements = true;
 }
 
 void DrawInfoNet(IPAddress* local_ip,IPAddress* subnet_mask,IPAddress* gateway_ip){
-  display.setCursor(0,0);
+  uint16_t color_elements = ILI9341_WHITE;
+
+  display.fillScreen(ILI9341_BLACK);
+  display.setTextColor(color_elements);
   display.setTextSize(2);
+
+  display.drawLine(5,5,235,5,color_elements);
+  display.drawLine(235,5,235,315,color_elements);
+  display.drawLine(235,315,5,315,color_elements);
+  display.drawLine(5,315,5,5,color_elements);
+
+  display.setCursor(10,10);
   display.println("LOCAL IP:");
+  display.setCursor(10,display.getCursorY());
   display.println(*local_ip);
   display.println("");
+  display.setCursor(10,display.getCursorY());
   display.println("SUBNET MASK:");
+  display.setCursor(10,display.getCursorY());
   display.println(*subnet_mask);
   display.println("");
+  display.setCursor(10,display.getCursorY());
   display.println("GATEWAY (ROUTER):");
+  display.setCursor(10,display.getCursorY());
   display.println(*gateway_ip);
 }
 
 void DrawPorts(uint16_t index){
-  display.fillScreen(ILI9341_WHITE);
-  display.setTextColor(ILI9341_BLACK);
-  display.setCursor(0,0);
+  uint16_t color_elements = ILI9341_WHITE;
+
+  display.fillScreen(ILI9341_BLACK);
+  display.setTextColor(color_elements);
   display.setTextSize(2);
+
+  display.drawLine(5,5,235,5,color_elements);
+  display.drawLine(235,5,235,315,color_elements);
+  display.drawLine(235,315,5,315,color_elements);
+  display.drawLine(5,315,5,5,color_elements);
+
+  display.setCursor(10,10);
   display.println("IP DEVICE:");
+  display.setCursor(10,display.getCursorY());
   display.println(service_device[index].ip);
   display.println("");
+  display.setCursor(10,display.getCursorY());
   display.println("service:");
   for (int i=0;i<max_amount_net;i++){
     if (index + i>=max_amount_net){
       break;
     }
     if (service_device[index].ip == service_device[index+i].ip){
+      display.setCursor(10,display.getCursorY());
       display.println(service_device[index+i].description);
     }
     else{

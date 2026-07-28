@@ -42,17 +42,18 @@ extern uint8_t current_net_index;
 extern uint8_t curent_index;
 extern uint8_t total_device;
 extern bool update_static_elements;
+extern const uint8_t totalItems;
 
 extern WifiNetwork data_net[];
 extern NetworkDevice data_device[];
 extern OpenService service_device[];
 
 // 3. Константная база вендоров
-const MacVendor vendors[];
+extern const MacVendor vendors[];
 
 // 4. Список портов
 extern const KnownPort common_ports[];
-extern uint8_t total_known_ports;
+extern const uint8_t total_known_ports;
 
 // 5. Прототипы функций (с совпадением имён и регистров)
 void AddNet(String ssid, int32_t rssi, String bssid, int32_t chanel, String encryption);

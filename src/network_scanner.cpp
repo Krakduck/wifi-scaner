@@ -119,7 +119,6 @@ void Manufacturer(String bssid, int index) {
 
   data_device[index].manufacturer = "Unknown";
 
-  int totalItems = sizeof(vendors) / sizeof(vendors[0]);
   for (int i = 0; i < totalItems; i++) {
     if (prefix == vendors[i].prefix) {
       Serial.println(vendors[i].vendor);
@@ -134,32 +133,61 @@ void ScanDevice() {
   struct eth_addr* ret_ethaddr;
   const ip4_addr_t* ret_ipaddr;
   Serial.println("функция scan_device вызвана");
+  uint16_t color_elements = ILI9341_WHITE;
+
+  display.fillScreen(ILI9341_BLACK);
+  display.setTextColor(color_elements);
+  display.setTextSize(2);
+
+  display.drawLine(5,5,235,5,color_elements);
+  display.drawLine(235,5,235,315,color_elements);
+  display.drawLine(235,315,5,315,color_elements);
+  display.drawLine(5,315,5,5,color_elements);
 
   while (WiFi.status() != WL_CONNECTED) {
-    display.fillScreen(ILI9341_WHITE);
+    display.fillRect(100,100,200,200,ILI9341_BLACK);
     display.setCursor(80, 120);
     display.setTextSize(5);
-    display.setTextColor(ILI9341_BLACK);
+    display.setTextColor(ILI9341_WHITE);
+    delay(20);
     display.print(".");
-    delay(30);
+    delay(20);
     display.print(".");
-    delay(30);
+    delay(20);
     display.print(".");
-    delay(30);
   }
 
-  display.fillScreen(ILI9341_WHITE);
   IPAddress local_ip = WiFi.localIP();
   IPAddress subnet_mask = WiFi.subnetMask();
   IPAddress gateway_ip = WiFi.gatewayIP();
   total_device = 0;
 
   DrawInfoNet(&local_ip, &subnet_mask, &gateway_ip);
-  display.setCursor(200, 200);
+  display.setCursor(10, 200);
   display.setTextColor(ILI9341_RED);
-  display.print("!!!");
+  display.print("Scan active");
+  // Запоминаем X-координату сразу после текста «Scan active», 
+  // чтобы точки рисовались вплотную к нему
+  int dots_x = display.getCursorX();
+  int dots_y = display.getCursorY();
 
   for (int i = 0; i < 254; i++) {
+    // Вычисляем стадию анимации от 0 до 3 на основе номера итерации (меняется каждые 4 шага)
+    int dot_phase = (i / 4) % 4; 
+
+    // Стираем область под точки
+    display.fillRect(dots_x, dots_y, 40, 20, ILI9341_BLACK);
+    display.setCursor(dots_x, dots_y);
+
+    // Выводим разное количество точек в зависимости от фазы
+    if (dot_phase == 1) {
+      display.print(".");
+    } else if (dot_phase == 2) {
+      display.print("..");
+    } else if (dot_phase == 3) {
+      display.print("...");
+    }
+
     if (i == 1) { // Сам роутер
       continue;
     }
@@ -175,8 +203,7 @@ void ScanDevice() {
     ip4_addr_t target_ip_lwip;
     target_ip_lwip.addr = (uint32_t)target_ip;
     etharp_request(netif_default, &target_ip_lwip);
-    delay(100);
-
+    delay(15);
     s8_t result = etharp_find_addr(netif_default, &target_ip_lwip, &ret_ethaddr, &ret_ipaddr);
     String bssid = "";
     if (result >= 0) {
@@ -197,7 +224,10 @@ void ScanDevice() {
     }
   }
 
-  display.fillRect(200, 200, 240, 320, ILI9341_WHITE);
+  display.fillRect(10, 200, 200, 300, ILI9341_BLACK);
+  display.setCursor(10,200);
+  display.print("devices found: ");
+  display.print(total_device);
   Serial.println(total_device);
   update_static_elements = true;
 }
