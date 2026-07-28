@@ -133,28 +133,30 @@ void ScanDevice() {
   struct eth_addr* ret_ethaddr;
   const ip4_addr_t* ret_ipaddr;
   Serial.println("функция scan_device вызвана");
-  uint16_t color_elements = ILI9341_WHITE;
 
-  display.fillScreen(ILI9341_BLACK);
-  display.setTextColor(color_elements);
+  uint16_t COLOR_BG  = ILI9341_BLACK;
+  uint16_t COLOR_TXT = ILI9341_GREEN;
+  uint16_t COLOR_ACC = ILI9341_DARKGREEN;
+
+  // Экран ожидания подключения
+  display.fillScreen(COLOR_BG);
+  display.drawRect(2, 2, 236, 316, COLOR_TXT);
+
+  // Хакерская заставка во время ожидания
+  display.setCursor(20, 100);
   display.setTextSize(2);
+  display.setTextColor(COLOR_TXT);
+  display.print("CONNECTING...");
 
-  display.drawLine(5,5,235,5,color_elements);
-  display.drawLine(235,5,235,315,color_elements);
-  display.drawLine(235,315,5,315,color_elements);
-  display.drawLine(5,315,5,5,color_elements);
-
+  int connect_dots = 0;
   while (WiFi.status() != WL_CONNECTED) {
-    display.fillRect(100,100,200,200,ILI9341_BLACK);
-    display.setCursor(80, 120);
-    display.setTextSize(5);
-    display.setTextColor(ILI9341_WHITE);
-    delay(20);
-    display.print(".");
-    delay(20);
-    display.print(".");
-    delay(20);
-    display.print(".");
+    display.fillRect(20, 130, 200, 30, COLOR_BG);
+    display.setCursor(20, 130);
+    for (int d = 0; d <= connect_dots; d++) {
+      display.print(" >");
+    }
+    connect_dots = (connect_dots + 1) % 5;
+    delay(100);
   }
 
   IPAddress local_ip = WiFi.localIP();
@@ -162,31 +164,33 @@ void ScanDevice() {
   IPAddress gateway_ip = WiFi.gatewayIP();
   total_device = 0;
 
+  // Отрисовываем заголовок интерфейса
   DrawInfoNet(&local_ip, &subnet_mask, &gateway_ip);
-  display.setCursor(10, 200);
-  display.setTextColor(ILI9341_RED);
-  display.print("Scan active");
-  // Запоминаем X-координату сразу после текста «Scan active», 
-  // чтобы точки рисовались вплотную к нему
-  int dots_x = display.getCursorX();
-  int dots_y = display.getCursorY();
+
+  // Оформляем блок сканирования сети
+  display.setCursor(10, 175);
+  display.setTextSize(1);
+  display.setTextColor(COLOR_TXT);
+  display.print("[>] ARP SCANNING NETWORK...");
+
+  // Отрисовка контейнера прогресс-бара
+  display.drawRect(10, 195, 220, 20, COLOR_TXT);
 
   for (int i = 0; i < 254; i++) {
-    // Вычисляем стадию анимации от 0 до 3 на основе номера итерации (меняется каждые 4 шага)
-    int dot_phase = (i / 4) % 4; 
+    // 1. Динамический анимированный прогресс-бар в стиле зебры/сегментов
+    int progress_width = map(i, 0, 253, 0, 216);
+    display.fillRect(12, 197, progress_width, 16, COLOR_TXT);
 
-    // Стираем область под точки
-    display.fillRect(dots_x, dots_y, 40, 20, ILI9341_BLACK);
-    display.setCursor(dots_x, dots_y);
-
-    // Выводим разное количество точек в зависимости от фазы
-    if (dot_phase == 1) {
-      display.print(".");
-    } else if (dot_phase == 2) {
-      display.print("..");
-    } else if (dot_phase == 3) {
-      display.print("...");
-    }
+    // 2. Отображение текущего сканируемого IP в реальном времени
+    display.fillRect(10, 222, 220, 16, COLOR_BG);
+    display.setCursor(10, 222);
+    display.setTextSize(1);
+    display.setTextColor(COLOR_ACC);
+    display.print("PING -> ");
+    display.print(local_ip[0]); display.print(".");
+    display.print(local_ip[1]); display.print(".");
+    display.print(local_ip[2]); display.print(".");
+    display.print(i);
 
     if (i == 1) { // Сам роутер
       continue;
@@ -224,10 +228,19 @@ void ScanDevice() {
     }
   }
 
-  display.fillRect(10, 200, 200, 300, ILI9341_BLACK);
-  display.setCursor(10,200);
-  display.print("devices found: ");
+  // Подведение итогов сканирования в инверсной плашке внизу
+  display.fillRect(8, 250, 224, 50, COLOR_TXT);
+  display.setCursor(16, 260);
+  display.setTextSize(2);
+  display.setTextColor(COLOR_BG);
+  display.print("FOUND: ");
   display.print(total_device);
+  display.print(" DEV");
+
+  display.setCursor(16, 282);
+  display.setTextSize(1);
+  display.print("ARP SCAN COMPLETE");
+
   Serial.println(total_device);
   update_static_elements = true;
 }
