@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include "network_scanner.h" // Подключаем оглавление сканера
 #include "display_ui.h"      // Подключаем оглавление интерфейса
+#include "web_server.h"      // Подключаем оглавление веб-интерфейса
 
 // 1. ПИНЫ
 const uint8_t scan_btn = D1;
@@ -15,7 +16,7 @@ Adafruit_ILI9341 display = Adafruit_ILI9341(TFT_CS, TFT_DC, TFT_RST);
 
 // 2. ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ И МАССИВЫ (Выделяем память под них в main.cpp)
 const uint8_t max_amount_net = 20;
-const int amount_screen = 4;
+const int amount_screen = 5;
 
 int screen_mode = 0;
 uint8_t current_net_index = 0;
@@ -82,7 +83,7 @@ const MacVendor vendors[] = {
 const uint8_t totalItems = sizeof(vendors) / sizeof(vendors[0]);
 
 // Список часто используемых портов
-const KnownPort common_ports[7] = {
+const KnownPort common_ports[] = {
   {80, "HTTP"},
   {443, "HTTPS"},
   {22, "SSH"},
@@ -113,10 +114,14 @@ void setup() {
   pinMode(page_btn, INPUT_PULLUP);
   pinMode(screen_mode_btn, INPUT_PULLUP);
 
+  InitWebServer();
+
   ScanNet();
 }
 
 void loop() {
+  HandleWebClient();
+
   bool need_draw = false;
   bool scan_btn_result = digitalRead(scan_btn);
   bool page_btn_result = digitalRead(page_btn);
@@ -139,10 +144,11 @@ void loop() {
     Serial.println("screen_mode");
     Serial.println(screen_mode);
     switch (screen_mode) {
-      case 0: need_draw = true; break;
-      case 1: Connect(); break;
-      case 2: DrawDevice(curent_index); break;
-      case 3: ScanTargetPorts(); break;
+      case 0: ScanNet(); break;
+      case 1: need_draw = true; break;
+      case 2: Connect(); break;
+      case 3: DrawDevice(curent_index); break;
+      case 4: ScanTargetPorts(); break;
     }
   }
 
