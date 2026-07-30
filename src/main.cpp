@@ -1,12 +1,15 @@
 #include <Arduino.h>
+#include <ESP8266WebServer.h>
 #include "network_scanner.h" // Подключаем оглавление сканера
 #include "web_server.h"      // Подключаем оглавление веб-интерфейса
+
+ESP8266WebServer server(80);
 
 // 2. ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ И МАССИВЫ (Выделяем память под них в main.cpp)
 const uint8_t max_amount_net = 20;
 const uint8_t max_amount_device = 20;
 const uint8_t max_amount_port = 20;
-const int amount_screen = 5;
+const uint8_t amount_screen = 6;
 
 int screen_mode = 0;
 uint8_t current_net_index = 0;
@@ -84,6 +87,9 @@ const KnownPort common_ports[] = {
 };
 const uint8_t total_known_ports = sizeof(common_ports) / sizeof(common_ports[0]);
 
+bool need_scan_device =false;
+bool need_scan_ports =false;
+
 void setup() {
   Serial.begin(115200);
   Serial.println(""); // Тестовый вывод для дальнейшей корректной работы
@@ -101,15 +107,12 @@ void setup() {
 void loop() {
   HandleWebClient();
 
-  if (screen_mode > amount_screen - 1) {
-    screen_mode = 0;
-    Serial.println(screen_mode);
-  }
-  
-  if (screen_mode < 0) {
-    screen_mode = amount_screen - 1;
-    Serial.println(screen_mode);
+  if(need_scan_device){
+    Connect();
   }
 
+  if(need_scan_ports){
+    ScanTargetPorts();
+  }
 }
  

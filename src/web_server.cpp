@@ -2,8 +2,6 @@
 #include "network_scanner.h"
 #include "display_ui.h"
 
-ESP8266WebServer server(80);
-
 void handleRoot(){
   String html ="";
 
@@ -23,35 +21,29 @@ void handleRoot(){
   server.send(200, "text/html", html);
 }
 
-void ModeNext() {
+void handleModeNext() {
   screen_mode++; 
-  Serial.println("кнопка screen_mode_btn нажата");
-  Serial.println("screen_mode");
-  Serial.println(screen_mode);
+  if (screen_mode > amount_screen-1){
+    screen_mode = 0;
+  } 
+
   switch (screen_mode) {
-      case 0: ScanNet(); break;
-      case 1: WebDrawMainScreen(); break;
-      case 2: Connect(); break;
-      case 3: WebDrawDevice(); break;
-      case 4: ScanTargetPorts(); break;
-    }              
-  //server.send(200, "text/plain", "OK");
+    case 0: 
+    case 1: server.sendHeader("Location", "/mainscreen"); break;
+    case 2: need_scan_device=true;
+    case 3: server.sendHeader("Location", "/device"); break;
+    case 4: need_scan_ports=true;
+    case 5: server.sendHeader("Location", "/ports"); break;
+  }
+  server.send(303); // Отправляем редирект прямо браузеру!        
 }
 
-void ModePrev() {
-  screen_mode--;   
-  Serial.println("кнопка screen_mode_btn нажата");
-  Serial.println("screen_mode");
-  Serial.println(screen_mode);  
-  switch (screen_mode) {
-      case 0: ScanNet(); break;
-      case 1: WebDrawMainScreen(); break;
-      case 2: Connect(); break;
-      case 3: WebDrawDevice(); break;
-      case 4: ScanTargetPorts(); break;
-    }          
-
-  //server.send(200, "text/plain", "OK");
+void handleModePrev() {
+  screen_mode--;            
+  if (screen_mode < 0){
+    screen_mode = amount_screen-1;
+  } 
+  server.send(200, "text/plain", "OK");
 }
 
 void WebDrawPorts(){
@@ -66,7 +58,7 @@ void WebDrawPorts(){
   html+="<body>";
   html+="    <h1>WebDrawDevice</h1>";
   for (int i =0;i<max_amount_net;i++){
-    if (service_device[i].ip){
+    if (service_device[i].ip !=""){
       html+="    TARGET HOST IP: "+ service_device[i].ip;
       html+="    OPEN SERVICES / PORTS: "+ service_device[i].description;
     }
@@ -97,7 +89,7 @@ void WebDrawInfoNet(IPAddress* local_ip, IPAddress* subnet_mask, IPAddress* gate
   html+="    <a href=\"/prevmode\"><button>Предыдущий режим сканера</button></a>";
   html+="</body>";
   html+="</html>";
-  
+  server.send(200, "text/html", html);
 };
 
 void WebDrawDevice(){
@@ -113,7 +105,7 @@ void WebDrawDevice(){
   html+="<body>";
   html+="    <h1>WebDrawDevice</h1>";
   for (int i =0;i<max_amount_net;i++){
-    if (data_device[i].ip){
+    if (data_device[i].ip != ""){
       html+="    TARGET IP ADDRESS: "+ data_device[i].ip;
       html+="    VENDOR: "+ data_device[i].vendor;
     }
@@ -139,7 +131,7 @@ void WebDrawMainScreen(){
   html+="<body>";
   html+="    <h1>WebDrawMainScreen</h1>";
   for (int i =0;i<max_amount_net;i++){
-    if (data_net[i].ssid){
+    if (data_net[i].ssid != ""){
       html+="    ssid: "+ data_net[i].ssid;
       html+="    rssi: "+ data_net[i].rssi;
       html+="    bssid: "+ data_net[i].bssid;
@@ -160,8 +152,12 @@ void WebDrawMainScreen(){
 void InitWebServer() {
   Serial.println("сервер настроен");
   server.on("/", handleRoot);
-  server.on("/nextmode", ModeNext); 
-  server.on("/prevmode", ModePrev); 
+  server.on("/nextmode", handleModeNext); 
+  server.on("/prevmode", handleModePrev); 
+  server.on("/ports", WebDrawPorts); 
+  //server.on("/infonet", WebDrawInfoNet); 
+  server.on("/device", WebDrawDevice); 
+  server.on("/mainscreen", WebDrawMainScreen); 
   server.begin();
 }
 

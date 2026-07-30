@@ -98,7 +98,6 @@ void ScanTargetPorts() {
       delay(10);
     }
   }
-  WebDrawPorts();
 }
 
 void Vendor(String bssid, int index) {
@@ -135,29 +134,17 @@ void ScanDevice() {
   const ip4_addr_t* ret_ipaddr;
   Serial.println("функция scan_device вызвана");
 
-  //uint16_t COLOR_BG  = ILI9341_BLACK;
-  //uint16_t COLOR_TXT = ILI9341_GREEN;
-  //uint16_t COLOR_ACC = ILI9341_DARKGREEN;
+  int attempts = 0;
+  // Ограничиваем максимум 10 секундами (20 попыток по 500мс)
+  while (WiFi.status() != WL_CONNECTED && attempts < 20) {
+    delay(500); // delay() в ESP8266 автоматически внутри себя вызывает yield()
+    attempts++;
+  }
 
-  // Экран ожидания подключения
-  //display.fillScreen(COLOR_BG);
-  //display.drawRect(2, 2, 236, 316, COLOR_TXT);
-
-  // Хакерская заставка во время ожидания
-  //display.setCursor(20, 100);
-  //display.setTextSize(2);
-  //display.setTextColor(COLOR_TXT);
-  //display.print("CONNECTING...");
-
-  //int connect_dots = 0;
-  while (WiFi.status() != WL_CONNECTED) {
-    //display.fillRect(20, 130, 200, 30, COLOR_BG);
-    //display.setCursor(20, 130);
-   // for (int d = 0; d <= connect_dots; d++) {
-     // display.print(" >");
-    //}
-    //connect_dots = (connect_dots + 1) % 5;
-    //delay(100);
+  // Если так и не подключились к роутеру — выходим, чтобы не упасть в Soft WDT
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("Ошибка: Нет подключения к роутеру для ARP-сканирования!");
+    return; 
   }
 
   IPAddress local_ip = WiFi.localIP(); //ip платы в этой сети
@@ -165,33 +152,11 @@ void ScanDevice() {
   IPAddress gateway_ip = WiFi.gatewayIP();
   total_device = 0;
 
-  // Отрисовываем заголовок интерфейса
+  //server.sendHeader("Location", "/infonet");
+  //server.send(303);
   WebDrawInfoNet(&local_ip, &subnet_mask, &gateway_ip);
 
-  // Оформляем блок сканирования сети
-  //display.setCursor(10, 175);
-  //display.setTextSize(1);
-  //display.setTextColor(COLOR_TXT);
-  //display.print("[>] ARP SCANNING NETWORK...");
-
-  // Отрисовка контейнера прогресс-бара
-  //display.drawRect(10, 195, 220, 20, COLOR_TXT);
-
   for (int i = 0; i < 254; i++) {
-    // 1. Динамический анимированный прогресс-бар в стиле зебры/сегментов
-    //int progress_width = map(i, 0, 253, 0, 216);
-    //display.fillRect(12, 197, progress_width, 16, COLOR_TXT);
-
-    // 2. Отображение текущего сканируемого IP в реальном времени
-    //display.fillRect(10, 222, 220, 16, COLOR_BG);
-    //display.setCursor(10, 222);
-    //display.setTextSize(1);
-    //display.setTextColor(COLOR_ACC);
-    //display.print("PING -> ");
-    //display.print(local_ip[0]); display.print(".");
-    //display.print(local_ip[1]); display.print(".");
-    //display.print(local_ip[2]); display.print(".");
-    //display.print(i);
 
     if (i == 1) { // Сам роутер
       continue;
@@ -227,20 +192,8 @@ void ScanDevice() {
       Vendor(bssid, total_device);
       total_device++;
     }
+    yield(); // <--- ОБЯЗАТЕЛЬНО! Отдает управление фоновым задачам Wi-Fi и сбрасывает WDT
   }
-
-  // Подведение итогов сканирования в инверсной плашке внизу
- // display.fillRect(8, 250, 224, 50, COLOR_TXT);
-  //display.setCursor(16, 260);
-  //display.setTextSize(2);
-  //display.setTextColor(COLOR_BG);
-  //display.print("FOUND: ");
-  //display.print(total_device);
-  //display.print(" DEV");
-
-  //display.setCursor(16, 282);
-  //display.setTextSize(1);
-  //display.print("ARP SCAN COMPLETE");
 
   Serial.println(total_device);
 }
