@@ -16,8 +16,13 @@ static void DrawCornerBrackets(uint16_t x, uint16_t y, uint16_t w, uint16_t h, u
   display.drawFastVLine(x + w - 1, y + h - len, len, color);
 }
 
-void DrawMainScreen(String ssid, int32_t rssi, String bssid, int32_t chanel, String encryption) {
+void DrawMainScreen(uint8_t index) {
   Serial.println("начинается отрисовка");
+  String ssid = data_net[index].ssid;
+  int32_t rssi = data_net[index].rssi;
+  String bssid = data_net[index].bssid;
+  int32_t chanel = data_net[index].chanel;
+  String encryption = data_net[index].encryption;
   
   // Хакерская палитра: глубокий черный фон, яркий монохромный зеленый / белый акцент
   uint16_t COLOR_BG       = ILI9341_BLACK;
@@ -178,7 +183,7 @@ void DrawDevice(uint8_t index) {
   display.drawRect(8, 114, 224, 45, COLOR_ACC);
   display.setCursor(14, 122);
   display.setTextSize(2);
-  display.println(data_device[index].manufacturer);
+  display.println(data_device[index].vendor);
 
   // Статусная полоса внизу
   display.fillRect(4, 292, 232, 24, COLOR_TXT);
@@ -226,7 +231,7 @@ void DrawInfoNet(IPAddress* local_ip, IPAddress* subnet_mask, IPAddress* gateway
   // Маска
   display.setCursor(10, 80);
   display.setTextSize(1);
-  display.println("[+] SUBNET MASK:");
+  display.println("");
   display.setCursor(14, 92);
   display.setTextSize(2);
   display.println(*subnet_mask);

@@ -9,6 +9,11 @@ void handlePrev();
 void ModeNext();
 void ModePrev();
 
+void WebDrawPorts();
+void WebDrawInfoNet(IPAddress* local_ip, IPAddress* subnet_mask, IPAddress* gateway_ip);
+void WebDrawDevice();
+void WebDrawMainScreen();
+
 void InitWebServer();
 
 void HandleWebClient();

@@ -17,7 +17,7 @@ struct WifiNetwork {
 struct NetworkDevice {
   String ip;
   String bssid;
-  const char* manufacturer;
+  String vendor;
 };
 
 struct OpenService {
@@ -37,6 +37,8 @@ struct KnownPort {
 
 // 2. Внешние переменные и массивы (память выделена в main.cpp)
 extern const uint8_t max_amount_net;
+extern const uint8_t max_amount_device;
+extern const uint8_t max_amount_port;
 extern uint8_t total_found_nets;
 extern uint8_t current_net_index;
 extern uint8_t curent_index;
@@ -59,7 +61,7 @@ extern const uint8_t total_known_ports;
 void AddNet(String ssid, int32_t rssi, String bssid, int32_t chanel, String encryption);
 void ScanNet();
 void ScanTargetPorts();
-void Manufacturer(String bssid, int index);
+void Vendor(String bssid, int index);
 void ScanDevice();
 void Connect();
 

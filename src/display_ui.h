@@ -12,6 +12,8 @@ extern Adafruit_ILI9341 display;
 
 // 2. Внешние переменные (память под них уже выделена в main.cpp)
 extern const uint8_t max_amount_net;
+extern const uint8_t max_amount_device;
+extern const uint8_t max_amount_port;
 extern uint8_t current_net_index;      // Индекс отображаемой сети
 extern uint8_t curent_index;           // Индекс для отображения страниц устройств/портов
 extern uint8_t total_found_nets;       // Кол-во найденных сетей
@@ -24,7 +26,7 @@ extern NetworkDevice data_device[];
 extern OpenService service_device[];
 
 // 4. Прототипы функций отрисовки
-void DrawMainScreen(String ssid, int32_t rssi, String bssid, int32_t chanel, String encryption);
+void DrawMainScreen(uint8_t index);
 void DrawDevice(uint8_t index);
 void DrawInfoNet(IPAddress* local_ip, IPAddress* subnet_mask, IPAddress* gateway_ip);
 void DrawPorts(uint16_t index);
