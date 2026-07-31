@@ -108,10 +108,12 @@ void loop() {
   HandleWebClient();
 
   if(need_scan_device){
+    need_scan_device =false;
     Connect();
   }
 
   if(need_scan_ports){
+    need_scan_ports =false;
     ScanTargetPorts();
   }
 }

@@ -29,11 +29,23 @@ void handleModeNext() {
 
   switch (screen_mode) {
     case 0: 
-    case 1: server.sendHeader("Location", "/mainscreen"); break;
-    case 2: need_scan_device=true;
-    case 3: server.sendHeader("Location", "/device"); break;
-    case 4: need_scan_ports=true;
-    case 5: server.sendHeader("Location", "/ports"); break;
+    case 1: 
+      server.sendHeader("Location", "/mainscreen"); 
+      break;
+    case 2: 
+      need_scan_device = true; // Поднимаем флаг сканирования
+      server.sendHeader("Location", "/device"); // Браузер сам откроет /device
+      break;
+    case 3: 
+      server.sendHeader("Location", "/device"); 
+      break;
+    case 4: 
+      need_scan_ports = true;
+      server.sendHeader("Location", "/ports"); 
+      break;
+    case 5: 
+      server.sendHeader("Location", "/ports"); 
+      break;
   }
   server.send(303); // Отправляем редирект прямо браузеру!        
 }

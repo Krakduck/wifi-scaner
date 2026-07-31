@@ -152,9 +152,7 @@ void ScanDevice() {
   IPAddress gateway_ip = WiFi.gatewayIP();
   total_device = 0;
 
-  //server.sendHeader("Location", "/infonet");
-  //server.send(303);
-  WebDrawInfoNet(&local_ip, &subnet_mask, &gateway_ip);
+  //WebDrawInfoNet(&local_ip, &subnet_mask, &gateway_ip);
 
   for (int i = 0; i < 254; i++) {
 
